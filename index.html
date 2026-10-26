@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MBM Manager — Starter</title>
+<style>
+:root{font-family:Arial,Helvetica,sans-serif;color:#172033;background:#f4f7fb}
+*{box-sizing:border-box}body{margin:0}.top{background:#123b68;color:white;padding:18px 16px}
+.top h1{font-size:22px;margin:0 0 5px}.top p{margin:0;color:#dce9f7;font-size:13px}
+main{max-width:1100px;margin:18px auto;padding:0 14px}.notice{background:#fff7df;border:1px solid #efd58a;padding:12px;border-radius:10px;font-size:13px;line-height:1.45;margin-bottom:14px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.card,.panel{background:white;border:1px solid #e1e7ef;border-radius:12px;padding:14px}.card small{color:#65738a}.num{font-size:25px;font-weight:700;margin-top:6px}
+.panel{margin-bottom:14px}.panel h2{font-size:17px;margin:0 0 12px}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+label{display:block;font-size:12px;font-weight:bold;color:#4b5870;margin-bottom:5px}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd5e1;border-radius:8px;background:#fff;font:inherit;font-size:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{border:0;border-radius:8px;padding:10px 13px;font-weight:700;cursor:pointer;background:#1559a6;color:white}button.secondary{background:#e8eef6;color:#173653}button.danger{background:#a82b2b}
+.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}th,td{text-align:left;border-bottom:1px solid #e6ebf2;padding:10px 8px}th{background:#f3f6fa;color:#45536a}td .smallbtn{padding:6px 8px;font-size:11px}
+.empty{text-align:center;padding:24px;color:#6b7789}
+.page-nav{display:flex;gap:8px;padding:12px 14px;background:#eaf0f7;position:sticky;top:0;z-index:5}.page-nav button{flex:1}.page-nav button.active{background:#0b7b36}.page{display:block}.page.hidden{display:none}.uploadhint{font-size:13px;color:#65738a;line-height:1.5}.dashstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.chartbox{height:280px;position:relative;margin:12px 0}.previewtable{max-height:360px;overflow:auto}
+@media(max-width:600px){.dashstats{grid-template-columns:1fr 1fr}.chartbox{height:240px}}
+footer{text-align:center;color:#718096;font-size:12px;padding:15px}
+@media(max-width:700px){.cards{grid-template-columns:repeat(3,1fr)}.formgrid,.filters{grid-template-columns:1fr 1fr}.card{padding:10px}.num{font-size:20px}}
+@media(max-width:420px){.formgrid,.filters{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr 1fr}.top h1{font-size:19px}}
+</style>
+</head>
+<body>
+<header class="top"><h1>MBM Manager</h1><p>Meter Reading Records — Starter Version</p></header>
+<nav class="page-nav"><button id="recordsPageBtn" class="active" type="button">Page 1: Records</button><button id="dashboardPageBtn" type="button">Page 2: Excel Dashboard</button></nav>
+<main>
+<div id="recordsPage" class="page">
+<div class="notice"><b>Starter version:</b> Records are saved only in this browser on this device. This is not connected to UHBVN systems or a shared database yet. Use sample/non-sensitive data until secure login and database access are configured.</div>
+<section class="cards">
+  <div class="card"><small>Total Records</small><div class="num" id="total">0</div></div>
+  <div class="card"><small>Completed</small><div class="num" id="completed">0</div></div>
+  <div class="card"><small>Pending</small><div class="num" id="pending">0</div></div>
+</section>
+<section class="panel">
+<h2>Add Meter Reading Record</h2>
+<form id="recordForm">
+<div class="formgrid">
+  <div><label for="serialDisplay">Serial Number (Auto / Locked)</label><input id="serialDisplay" value="Auto-generated when saved" readonly aria-readonly="true"></div>
+  <div><label for="area">Area / Village</label><input id="area" placeholder="e.g. Kharkhoda"></div>
+  <div><label for="date">Reading Date *</label><input id="date" type="date" required></div>
+  <div><label for="meter">Meter Serial No. (Auto Read / Manual Edit)</label><input id="meter" placeholder="Upload photo to read serial number" readonly aria-readonly="true"><div class="actions" style="margin-top:6px"><button type="button" class="secondary" id="autoReadMeter">Auto Read from Photo</button><button type="button" class="secondary" id="manualMeter">Manual Edit</button></div><small id="meterOcrMsg" style="color:#65738a">Upload a clear meter photo. The app will try to read the serial number automatically.</small></div>
+  <div><label for="location">Current Location</label><input id="location" placeholder="GPS coordinates or location"></div>
+  <div><label for="meterPhoto">Meter Photo</label><input id="meterPhoto" type="file" accept="image/*" capture="environment"></div>
+  <div><label for="reading">Current Reading</label><input id="reading" type="number" min="0" step="any" placeholder="Reading value"></div>
+  <div><label for="status">Status</label><select id="status"><option>Pending</option><option>Complete</option></select></div>
+  <div style="grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <button type="button" class="secondary" id="locationBtn">Use Current GPS Location</button>
+  <span id="locationMsg" style="font-size:12px;color:#65738a">Location access requires browser permission.</span>
+  <div id="photoPreviewWrap" style="display:none;width:100%"><label>Selected meter photo</label><img id="photoPreview" alt="Meter photo preview" style="max-width:180px;max-height:180px;object-fit:contain;border-radius:8px;border:1px solid #ccd5e1"></div>
+</div>
+  <div style="grid-column:1/-1"><label for="notes">Notes</label><textarea id="notes" rows="2" placeholder="Optional notes"></textarea></div>
+</div>
+<div class="actions"><button type="submit">Save Record</button><button class="secondary" type="reset">Clear Form</button></div>
+</form>
+</section>
+<section class="panel">
+<h2>Records & Excel Export</h2>
+<div class="filters">
+  <div><label for="filterDate">Reading Date</label><input id="filterDate" type="date"></div>
+  <div><label for="filterArea">Area</label><input id="filterArea" placeholder="Filter area"></div>
+  <div><label for="filterStatus">Status</label><select id="filterStatus"><option value="">All statuses</option><option>Pending</option><option>Complete</option></select></div>
+</div>
+<div class="actions" style="margin:0 0 12px"><button id="exportBtn">Download Excel (.xlsx)</button><button class="secondary" id="exportAllBtn">Export All to Excel (.xlsx)</button><button class="secondary" id="clearFilters">Clear Filters</button></div>
+<div class="tablewrap"><table><thead><tr><th>Serial No.</th><th>Area</th><th>Date</th><th>Meter Serial No.</th><th>Current Location</th><th>Meter Photo</th><th>Reading</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table><div class="empty" id="empty">No records yet. Add a record above to begin.</div></div>
+</section>
+</div>
+<div id="dashboardPage" class="page hidden">
+<section class="panel">
+<h2>Upload Excel & View Dashboard</h2>
+<p class="uploadhint">Upload your Excel/CSV file to create a dashboard similar to your screenshots. The app reads the selected worksheet and builds summary cards, day-wise progress, agency-wise totals and remark-wise counts when matching columns are present. Column names vary between files, so review the results against your original workbook.</p>
+<div class="formgrid"><div style="grid-column:1/-1"><label for="excelUpload">Upload Excel / CSV</label><input id="excelUpload" type="file" accept=".xlsx,.xls,.csv"></div><div><label for="sheetSelect">Worksheet</label><select id="sheetSelect" disabled><option>Upload a file first</option></select></div></div>
+<div id="uploadedDash" style="display:none">
+ <div class="dashstats"><div class="card"><small>Total records</small><div class="num" id="uTotal">0</div></div><div class="card"><small>Completed / OK</small><div class="num" id="uCompleted">0</div></div><div class="card"><small>Pending</small><div class="num" id="uPending">0</div></div></div>
+ <section class="panel"><h2>Billing Summary</h2><div class="dashstats"><div class="card"><small>Numeric total</small><div class="num" id="uNumericTotal">—</div></div><div class="card"><small>Columns found</small><div class="num" id="uColumns">0</div></div><div class="card"><small>Rows found</small><div class="num" id="uRows">0</div></div></div></section>
+ <section class="panel"><h2>Day-to-Day Billing Progress</h2><div class="chartbox"><canvas id="dayChart"></canvas></div></section>
+ <section class="panel"><h2>Agency-wise Billed</h2><div class="chartbox"><canvas id="agencyChart"></canvas></div></section>
+ <section class="panel"><h2>Read Remark-wise Billed</h2><div class="chartbox"><canvas id="remarkChart"></canvas></div></section>
+ <section class="panel"><h2>Uploaded Data Preview</h2><p class="uploadhint" id="uHint"></p><div class="previewtable"><table><thead id="uHead"></thead><tbody id="uBody"></tbody></table></div><div class="actions"><button id="downloadImported">Download uploaded sheet as Excel</button></div></section>
+</div>
+</section>
+</div>
+<footer>Independent starter project • Not an official UHBVN application</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const KEY='mbm_manager_starter_records_v1';
+let records=[];
+let editingRecord=null;
+let selectedPhotoData='';
+let meterManualMode=false;
+let ocrBusy=false;
+try{records=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){records=[]}
+let serialSeed=0; records.forEach(r=>{if(!Number(r.serialNo)){serialSeed++;r.serialNo=serialSeed}else serialSeed=Math.max(serialSeed,Number(r.serialNo)||0)});
+const $=id=>document.getElementById(id);
+$('date').value=new Date().toISOString().slice(0,10);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(records));render()}catch(e){alert('Browser storage is full. Try a smaller photo or remove old records.');}}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function filtered(){
+ const d=$('filterDate').value, a=$('filterArea').value.toLowerCase().trim(), st=$('filterStatus').value;
+ return records.filter(r=>(!d||r.date===d)&&(!a||(r.area||'').toLowerCase().includes(a))&&(!st||r.status===st));
+}
+function render(){
+ $('total').textContent=records.length;
+ $('completed').textContent=records.filter(r=>r.status==='Complete').length;
+ $('pending').textContent=records.filter(r=>r.status!=='Complete').length;
+ const list=filtered(); $('tbody').innerHTML='';
+ $('empty').style.display=list.length?'none':'block';
+ list.forEach(r=>{
+  const photo=r.photo?`<img src="${r.photo}" alt="Meter photo" style="width:54px;height:54px;object-fit:cover;border-radius:6px">`:'—';
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${esc(r.serialNo??'')}</td><td>${esc(r.area)}</td><td>${esc(r.date)}</td><td>${esc(r.meter)}</td><td>${esc(r.location)}</td><td>${photo}</td><td>${esc(r.reading)}</td><td>${esc(r.status)}</td><td><button class="smallbtn secondary" data-edit="${esc(r.id)}">Edit</button> <button class="smallbtn danger" data-delete="${esc(r.id)}">Delete</button></td>`;
+  $('tbody').appendChild(tr);
+ });
+}
+function resetForm(){
+ $('recordForm').reset(); $('date').value=new Date().toISOString().slice(0,10); $('status').value='Pending'; $('serialDisplay').value='Auto-generated when saved';
+ editingRecord=null; selectedPhotoData=''; meterManualMode=false; $('meter').readOnly=true; $('meterOcrMsg').textContent='Upload a clear meter photo. The app will try to read the serial number automatically.'; $('meterOcrMsg').style.color='#65738a'; $('photoPreviewWrap').style.display='none'; $('locationMsg').textContent='Location access requires browser permission.';
+}
+$('meterPhoto').addEventListener('change',()=>{
+ const file=$('meterPhoto').files[0]; if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Please choose an image file.');return}
+ const reader=new FileReader();
+ reader.onload=()=>{
+  const img=new Image();
+  img.onload=()=>{
+   const max=1800, scale=Math.min(1,max/Math.max(img.width,img.height));
+   const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+   canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+   selectedPhotoData=canvas.toDataURL('image/jpeg',0.82);
+   $('photoPreview').src=selectedPhotoData;$('photoPreviewWrap').style.display='block';
+   // Automatically try OCR after a photo is selected; the user can still switch to manual entry.
+   readMeterSerialFromPhoto();
+  };
+  img.src=reader.result;
+ };
+ reader.readAsDataURL(file);
+});
+function makeOcrVariants(dataUrl){
+ return new Promise((resolve,reject)=>{
+  const img=new Image();img.onload=()=>{
+   const variants=[dataUrl];
+   // OCR benefits from a larger, high-contrast grayscale version of the whole photo.
+   const scale=Math.min(2.5,1800/Math.max(img.width,img.height));
+   const c=document.createElement('canvas');c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
+   const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,c.width,c.height);
+   const im=ctx.getImageData(0,0,c.width,c.height),d=im.data;
+   for(let i=0;i<d.length;i+=4){const gray=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];const contrast=Math.max(0,Math.min(255,(gray-110)*1.65+128));d[i]=d[i+1]=d[i+2]=contrast;}
+   ctx.putImageData(im,0,0);variants.push(c.toDataURL('image/png'));
+   // Label/barcode serials often sit in the lower half of the meter photo. Include a lower-half crop.
+   const crop=document.createElement('canvas');crop.width=c.width;crop.height=Math.round(c.height*0.62);
+   crop.getContext('2d').drawImage(c,0,Math.round(c.height*0.34),c.width,crop.height,0,0,crop.width,crop.height);
+   variants.push(crop.toDataURL('image/png'));resolve(variants);
+  };img.onerror=reject;img.src=dataUrl;
+ });
+}
+async function readMeterSerialFromPhoto(){
+ if(!selectedPhotoData){$('meterOcrMsg').textContent='Please upload a meter photo first.';return}
+ if(!window.Tesseract){$('meterOcrMsg').textContent='Auto-reading library did not load. Tap Manual Edit to type the number.';$('meterOcrMsg').style.color='#b45309';return}
+ if(ocrBusy)return;
+ ocrBusy=true;$('autoReadMeter').disabled=true;$('meterOcrMsg').textContent='Scanning the meter label and barcode…';$('meterOcrMsg').style.color='#65738a';
+ try{
+  const variants=await makeOcrVariants(selectedPhotoData);let bestSerial='',bestScore=-1;
+  for(let i=0;i<variants.length;i++){
+   $('meterOcrMsg').textContent='Scanning photo version '+(i+1)+' of '+variants.length+'…';
+   const opts={logger:m=>{if(m.status==='recognizing text')$('meterOcrMsg').textContent='Reading meter label… '+Math.round((m.progress||0)*100)+'%'}};
+   // First pass targets digit strings (typical meter serial labels); other pass can recover mixed OCR output.
+   if(i<2)opts.tessedit_char_whitelist='0123456789';
+   const result=await Tesseract.recognize(variants[i],'eng',opts);
+   const raw=result?.data?.text||'';const cleaned=raw.replace(/[Oo]/g,'0').replace(/[Il|]/g,'1');
+   const candidates=cleaned.match(/\d{6,12}/g)||[];
+   for(const candidate of candidates){
+    let score=0;
+    if(candidate.length===8)score+=100;
+    else score+=Math.max(0,70-Math.abs(candidate.length-8)*12);
+    // Prefer candidates that appear on the label crop, which is more likely to include the printed serial.
+    if(i===2)score+=15;
+    // Do not choose a short meter display reading.
+    if(candidate.length<7)score-=40;
+    if(score>bestScore){bestScore=score;bestSerial=candidate}
+   }
+   if(bestSerial.length===8 && i===2)break;
+  }
+  if(bestSerial){$('meter').value=bestSerial;$('meter').readOnly=!meterManualMode;$('meterOcrMsg').textContent='Possible serial detected: '+bestSerial+'. Please verify it against the printed number; tap Manual Edit if incorrect.';$('meterOcrMsg').style.color='#15803d'}
+  else{$('meterOcrMsg').textContent='Serial number not detected clearly. Zoom/crop the white serial label or tap Manual Edit and type the number.';$('meterOcrMsg').style.color='#b45309';$('meter').readOnly=!meterManualMode}
+ }catch(err){console.error(err);$('meterOcrMsg').textContent='Could not read the serial number. Try a clearer close-up photo or tap Manual Edit.';$('meterOcrMsg').style.color='#b45309'}
+ finally{ocrBusy=false;$('autoReadMeter').disabled=false}
+}
+$('autoReadMeter').addEventListener('click',readMeterSerialFromPhoto);
+$('manualMeter').addEventListener('click',()=>{meterManualMode=true;$('meter').readOnly=false;$('meter').focus();$('meterOcrMsg').textContent='Manual edit enabled. Type or correct the meter serial number.';$('meterOcrMsg').style.color='#1d4ed8'});
+$('meterPhoto').addEventListener('click',()=>{if(!meterManualMode)$('meter').readOnly=true});
+
+$('locationBtn').addEventListener('click',()=>{
+ if(!navigator.geolocation){$('locationMsg').textContent='GPS location is not supported by this browser.';return}
+ $('locationMsg').textContent='Getting location…';
+ navigator.geolocation.getCurrentPosition(pos=>{
+  $('location').value=pos.coords.latitude.toFixed(6)+', '+pos.coords.longitude.toFixed(6);
+  $('locationMsg').textContent='Location captured.';
+ },err=>{
+  $('locationMsg').textContent=err.code===1?'Permission denied. Allow location access in browser settings.':'Could not get location. Try again outdoors.';
+ },{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
+});
+$('recordForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const old=editingRecord;
+ const nextSerial=records.reduce((m,x)=>Math.max(m,Number(x.serialNo)||0),0)+1;
+ const r={id:old?old.id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),
+ serialNo:old?(Number(old.serialNo)||nextSerial):nextSerial,area:$('area').value.trim(),
+ date:$('date').value,
+ meter:$('meter').value.trim(),location:$('location').value.trim(),photo:selectedPhotoData||(old?old.photo:''),
+ reading:$('reading').value,status:$('status').value,notes:$('notes').value.trim(),updatedAt:new Date().toISOString()};
+ if(!r.date){alert('Enter reading date.');return}
+ if(old){records=records.map(x=>x.id===old.id?r:x)}else{records.push(r)}
+ save();resetForm();alert('Record saved on this device.');
+});
+$('recordForm').addEventListener('reset',()=>{setTimeout(()=>{editingRecord=null;selectedPhotoData='';$('photoPreviewWrap').style.display='none'},0)});
+$('tbody').addEventListener('click',e=>{
+ const del=e.target.dataset.delete, edit=e.target.dataset.edit;
+ if(del){if(confirm('Delete this record?')){records=records.filter(r=>r.id!==del);save()}return}
+ if(edit){const r=records.find(x=>x.id===edit);if(!r)return;editingRecord=r;selectedPhotoData='';
+  ['area','date','meter','location','reading','status','notes'].forEach(k=>$(k).value=r[k]??''); $('meter').readOnly=true; meterManualMode=false; $('meterOcrMsg').textContent='Tap Manual Edit to correct the meter serial number, or upload a new photo and tap Auto Read.'; $('serialDisplay').value=String(r.serialNo??'Auto-generated');
+  if(r.photo){$('photoPreview').src=r.photo;$('photoPreviewWrap').style.display='block'}else{$('photoPreviewWrap').style.display='none'}
+  $('locationMsg').textContent=r.location?'Saved location loaded.':'Location not recorded.';
+  window.scrollTo({top:0,behavior:'smooth'});
+ }
+});
+['filterDate','filterArea','filterStatus'].forEach(id=>$(id).addEventListener('input',render));
+$('clearFilters').onclick=()=>{['filterDate','filterArea','filterStatus'].forEach(id=>$(id).value='');render()};
+async function exportXLSX(list){
+ if(!list.length){alert('No records to export.');return}
+ if(!window.ExcelJS){alert('Excel export library did not load. Check your internet connection and try again.');return}
+ const wb=new ExcelJS.Workbook();
+ wb.creator='MBM Manager';
+ wb.created=new Date();
+ const ws=wb.addWorksheet('MBM Records');
+ ws.columns=[
+  {header:'Serial No.',key:'serialNo',width:14},
+  {header:'Area / Village',key:'area',width:22},
+  {header:'Reading Date',key:'date',width:15},
+  {header:'Meter Serial No.',key:'meter',width:22},
+  {header:'Current Location (GPS / address)',key:'location',width:32},
+  {header:'Meter Photo',key:'photo',width:18},
+  {header:'Current Reading',key:'reading',width:18},
+  {header:'Status',key:'status',width:14},
+  {header:'Notes',key:'notes',width:30},
+  {header:'Last Updated',key:'updatedAt',width:26}
+ ];
+ ws.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}};
+ ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1559A6'}};
+ ws.getRow(1).alignment={vertical:'middle',wrapText:true};
+ ws.getRow(1).height=30;
+ const photoColumn=7;
+ for(let i=0;i<list.length;i++){
+  const r=list[i], rowNum=i+2;
+  ws.addRow({
+   serialNo:r.serialNo??(i+1),area:r.area||'',date:r.date||'',
+   meter:r.meter||'',location:r.location||'',photo:r.photo?'Photo embedded below':'',
+   reading:r.reading||'',status:r.status||'',notes:r.notes||'',updatedAt:r.updatedAt||''
+  });
+  const row=ws.getRow(rowNum);
+  row.alignment={vertical:'middle',wrapText:true};
+  if(r.photo){
+   row.height=90;
+   try{
+    const imageId=wb.addImage({base64:r.photo,extension:'jpeg'});
+    ws.addImage(imageId,{tl:{col:photoColumn-1,row:rowNum-1},br:{col:photoColumn,row:rowNum}});
+   }catch(err){
+    row.getCell(photoColumn).value='Photo could not be embedded';
+   }
+  }
+ }
+ ws.views=[{state:'frozen',ySplit:1}];
+ ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columns.length}};
+ const buffer=await wb.xlsx.writeBuffer();
+ const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='MBM_records_'+new Date().toISOString().slice(0,10)+'.xlsx';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('exportBtn').onclick=()=>exportXLSX(filtered()).catch(e=>{console.error(e);alert('Excel export failed. Please try again or check your internet connection.')});
+$('exportAllBtn').onclick=()=>exportXLSX(records).catch(e=>{console.error(e);alert('Excel export failed. Please try again or check your internet connection.')});
+
+// Excel-upload dashboard: parses each uploaded workbook in the browser.
+let uploadedWorkbook=null, uploadedSheetName='', uploadedMatrix=[], uploadedCharts={};
+function norm(v){return String(v??'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function findCol(headers, terms){return headers.findIndex(h=>terms.some(t=>norm(h).includes(norm(t))))}
+function numVal(v){if(typeof v==='number')return v;let x=String(v??'').replace(/,/g,'').replace(/[₹%]/g,'').trim();if(!x)return NaN;return Number(x)}
+function destroyChart(id){if(uploadedCharts[id]){uploadedCharts[id].destroy();delete uploadedCharts[id]}}
+function drawChart(id,type,labels,values,label){destroyChart(id);if(!window.Chart)return;const canvas=$(id);uploadedCharts[id]=new Chart(canvas,{type,data:{labels,datasets:[{label,data:values}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==='doughnut'}},scales:type==='doughnut'?{}:{x:{ticks:{maxRotation:55,minRotation:0}},y:{beginAtZero:true}}}})}
+function renderUploadedSheet(name){
+ if(!uploadedWorkbook)return;uploadedSheetName=name;
+ const ws=uploadedWorkbook.Sheets[name];const matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+ if(!matrix.length){alert('This worksheet is empty.');return}
+ const headers=matrix[0].map((v,i)=>String(v||('Column '+(i+1))));const rows=matrix.slice(1).filter(r=>r.some(v=>String(v??'').trim()!==''));
+ $('uploadedDash').style.display='block';$('uRows').textContent=rows.length;$('uColumns').textContent=headers.length;
+ const statusCol=findCol(headers,['status','remark','readremark','billstatus','result']);
+ const dateCol=findCol(headers,['date','readingdate','billdate','readdate']);
+ const agencyCol=findCol(headers,['agency','contractor','vendor','hesl','company']);
+ const remarkCol=findCol(headers,['remark','status','result','readremark']);
+ const accountCol=findCol(headers,['accountno','cano','consumeraccount','accountnumber','account']);
+ const completed=rows.filter(r=>{let v=statusCol>=0?norm(r[statusCol]):'';return ['ok','complete','completed','billed','success'].some(t=>v.includes(t))}).length;
+ const pending=rows.filter(r=>{let v=statusCol>=0?norm(r[statusCol]):'';return ['pending','notbilled','unbilled','hold'].some(t=>v.includes(t))}).length;
+ $('uTotal').textContent=rows.length;$('uCompleted').textContent=statusCol>=0?completed:'—';$('uPending').textContent=statusCol>=0?pending:'—';
+ let numericCol=-1;for(let c=headers.length-1;c>=0;c--){if(rows.some(r=>Number.isFinite(numVal(r[c])))){numericCol=c;break}}
+ let sum=0;if(numericCol>=0)rows.forEach(r=>{let n=numVal(r[numericCol]);if(Number.isFinite(n))sum+=n});$('uNumericTotal').textContent=numericCol>=0?sum.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';
+ // Day-to-day chart: count records by date, or use numeric total by date if a value column exists.
+ if(dateCol>=0){let m=new Map();rows.forEach(r=>{let d=String(r[dateCol]||'Unknown');let n=numericCol>=0?numVal(r[numericCol]):1;if(Number.isFinite(n))m.set(d,(m.get(d)||0)+n)});let a=[...m.entries()].slice(0,31);drawChart('dayChart','bar',a.map(x=>x[0]),a.map(x=>x[1]),numericCol>=0?headers[numericCol]:'Record count');$('dayChart').parentElement.parentElement.style.display='block'}else{$('dayChart').parentElement.parentElement.style.display='none'}
+ // Agency chart: aggregate selected numeric column or counts.
+ if(agencyCol>=0){let m=new Map();rows.forEach(r=>{let k=String(r[agencyCol]||'Unknown');let n=numericCol>=0?numVal(r[numericCol]):1;if(Number.isFinite(n))m.set(k,(m.get(k)||0)+n)});let a=[...m.entries()].sort((x,y)=>y[1]-x[1]).slice(0,15);drawChart('agencyChart','doughnut',a.map(x=>x[0]),a.map(x=>x[1]),numericCol>=0?headers[numericCol]:'Records')}else{destroyChart('agencyChart');$('agencyChart').parentElement.parentElement.style.display='none'}
+ // Remark chart: count rows by each remark/status.
+ if(remarkCol>=0){let m=new Map();rows.forEach(r=>{let k=String(r[remarkCol]||'Blank');m.set(k,(m.get(k)||0)+1)});let a=[...m.entries()].sort((x,y)=>y[1]-x[1]).slice(0,20);drawChart('remarkChart','bar',a.map(x=>x[0]),a.map(x=>x[1]),'Record count')}else{destroyChart('remarkChart');$('remarkChart').parentElement.parentElement.style.display='none'}
+ $('uHead').innerHTML='<tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>';
+ $('uBody').innerHTML=rows.slice(0,100).map(r=>'<tr>'+headers.map((h,i)=>'<td>'+esc(r[i]??'')+'</td>').join('')+'</tr>').join('');
+ let notes=[];if(dateCol<0)notes.push('No date column detected, so day-wise chart is hidden.');if(agencyCol<0)notes.push('No agency/contractor column detected, so agency chart is hidden.');if(remarkCol<0)notes.push('No remark/status column detected, so remark chart is hidden.');if(numericCol<0)notes.push('No numeric column detected.');$('uHint').textContent=notes.length?notes.join(' '):'Charts are generated from columns detected in this worksheet. Confirm the selected numeric column is the billing measure you want.';
+}
+$('excelUpload').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!window.XLSX){alert('Excel reader did not load. Please check your internet connection.');return}try{uploadedWorkbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});const sel=$('sheetSelect');sel.innerHTML='';uploadedWorkbook.SheetNames.forEach(n=>{let o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)});sel.disabled=false;renderUploadedSheet(uploadedWorkbook.SheetNames[0])}catch(err){console.error(err);alert('Could not read this file. Please upload a valid .xlsx, .xls or .csv file.')}});
+$('sheetSelect').addEventListener('change',()=>renderUploadedSheet($('sheetSelect').value));
+$('downloadImported').addEventListener('click',()=>{if(uploadedWorkbook&&uploadedSheetName){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,uploadedWorkbook.Sheets[uploadedSheetName],uploadedSheetName.slice(0,31));XLSX.writeFile(wb,'Uploaded_'+uploadedSheetName.replace(/[^a-z0-9_-]/gi,'_')+'.xlsx')}});
+function showPage(which){const isDash=which==='dashboard';$('recordsPage').classList.toggle('hidden',isDash);$('dashboardPage').classList.toggle('hidden',!isDash);$('recordsPageBtn').classList.toggle('active',!isDash);$('dashboardPageBtn').classList.toggle('active',isDash);window.scrollTo({top:0,behavior:'smooth'});if(isDash&&uploadedWorkbook&&uploadedSheetName){setTimeout(()=>{Object.keys(uploadedCharts).forEach(id=>{if(uploadedCharts[id])uploadedCharts[id].resize()})},50)}}
+$('recordsPageBtn').addEventListener('click',()=>showPage('records'));
+$('dashboardPageBtn').addEventListener('click',()=>showPage('dashboard'));
+render();
+</script>
+</body>
+</html>
